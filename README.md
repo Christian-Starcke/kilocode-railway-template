@@ -36,5 +36,5 @@ curl -u "kilo:$KILO_SERVER_PASSWORD" "https://<domain>/global/health"
 ## Local image build
 
 ```bash
-docker build --build-arg KILO_VERSION=7.4.1 -t kilo-railway .
+docker build --build-arg KILO_VERSION=7.4.3 -t kilo-railway .
 ```
