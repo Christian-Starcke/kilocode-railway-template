@@ -19,6 +19,7 @@ RUN npm install -g "@kilocode/cli@${KILO_VERSION}" \
 
 WORKDIR /app
 
+COPY redirect.js /app/redirect.js
 COPY start.sh /app/start.sh
 COPY scripts/ /app/scripts/
 RUN chmod +x /app/start.sh /app/scripts/*.sh

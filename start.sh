@@ -32,5 +32,10 @@ elif [ -x /app/scripts/workspace-bootstrap.sh ]; then
     echo "[kilo] WARNING: local bootstrap failed; continuing" >&2
 fi
 
-echo "[kilo] Starting kilo serve on 0.0.0.0:${PORT:-8080} (version=${KILO_VERSION:-unknown})"
-exec kilo serve --hostname 0.0.0.0 --port "${PORT:-8080}"
+INTERNAL_PORT=$(( ${PORT:-8080} + 1 ))
+
+echo "[kilo] Starting kilo serve on 127.0.0.1:${INTERNAL_PORT} (version=${KILO_VERSION:-unknown})"
+kilo serve --hostname 127.0.0.1 --port "${INTERNAL_PORT}" &
+
+echo "[redirect] Starting redirect server on 0.0.0.0:${PORT:-8080} ( / → /console )"
+exec node /app/redirect.js
