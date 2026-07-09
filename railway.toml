@@ -1,0 +1,15 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+restartPolicyType = "on_failure"
+serverless = false
+startCommand = "/bin/sh /app/start.sh"
+
+# Persistent volume must be mounted at /data
+requiredMountPath = "/data"
+
+# Required variables (set in Railway / connections-hub sync):
+#   KILO_SERVER_PASSWORD - HTTP Basic Auth password (required)
+#   KILO_CONFIG_CONTENT  - trusted kilo.json (MCP + model)
+#   KILO_VERSION         - npm @kilocode/cli version (Dockerfile ARG; rebuild on change)
