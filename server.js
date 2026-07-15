@@ -47,6 +47,7 @@ if (!PASSWORD) {
 log('INFO', `Starting Kilo proxy wrapper`);
 log('INFO', `Port: ${PORT}, Internal port: ${INTERNAL_PORT}`);
 log('INFO', `Log level: ${LOG_LEVEL}`);
+log('INFO', `Username: ${USERNAME}, Password length: ${PASSWORD.length}`);
 
 // Parse Basic Auth from request
 function parseBasicAuth(req) {
@@ -141,7 +142,9 @@ function handleRequest(req, res) {
   }
 
   // Check authentication
+  if (shouldLog('DEBUG')) log('DEBUG', `Checking auth for ${req.method} ${req.url}`);
   if (!checkBasicAuth(req)) {
+    if (shouldLog('DEBUG')) log('DEBUG', `Auth failed, returning 401`);
     const body = Buffer.from(UNAUTHORIZED_HTML, 'utf-8');
     res.writeHead(401, {
       'WWW-Authenticate': 'Basic realm="Kilo Console"',
@@ -152,6 +155,7 @@ function handleRequest(req, res) {
     res.end(body);
     return;
   }
+  if (shouldLog('DEBUG')) log('DEBUG', `Auth passed, proxying request`);
 
   // Proxy to internal kilo serve
   const options = {
