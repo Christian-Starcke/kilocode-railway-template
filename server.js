@@ -51,6 +51,14 @@ log('INFO', `Log level: ${LOG_LEVEL}`);
 // Parse Basic Auth from request
 function parseBasicAuth(req) {
   const auth = req.headers.authorization;
+  
+  if (shouldLog('DEBUG')) {
+    log('DEBUG', `Auth header present: ${auth ? 'YES' : 'NO'}`);
+    if (process.env.LOG_LEVEL === 'DEBUG') {
+      log('DEBUG', `All headers: ${JSON.stringify(Object.keys(req.headers))}`);
+    }
+  }
+  
   if (!auth) return null;
 
   const [scheme, encoded] = auth.split(' ');
