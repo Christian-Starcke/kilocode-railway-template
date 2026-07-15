@@ -71,4 +71,6 @@ fi
 echo "[server] Starting Kilo proxy server on 0.0.0.0:${PORT:-8080} ( / → /console )"
 export INTERNAL_PORT
 export LOG_LEVEL="${LOG_LEVEL:-INFO}"
+export KILO_SERVER_USERNAME="${KILO_SERVER_USERNAME:-kilo}"
+export KILO_SERVER_PASSWORD
 exec node /app/server.js
