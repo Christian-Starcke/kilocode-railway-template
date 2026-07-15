@@ -38,3 +38,4 @@ curl -u "kilo:$KILO_SERVER_PASSWORD" "https://<domain>/global/health"
 ```bash
 docker build --build-arg KILO_VERSION=7.4.3 -t kilo-railway .
 ```
+# Trigger redeploy - testing env vars
