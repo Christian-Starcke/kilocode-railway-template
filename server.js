@@ -88,8 +88,20 @@ function timingSafeEqual(a, b) {
 // Check if request is authenticated
 function checkBasicAuth(req) {
   const auth = parseBasicAuth(req);
-  if (!auth) return false;
-  return timingSafeEqual(auth.user, USERNAME) && timingSafeEqual(auth.pass, PASSWORD);
+  if (!auth) {
+    if (shouldLog('DEBUG')) log('DEBUG', 'No auth credentials parsed');
+    return false;
+  }
+  
+  const userMatch = timingSafeEqual(auth.user, USERNAME);
+  const passMatch = timingSafeEqual(auth.pass, PASSWORD);
+  
+  if (shouldLog('DEBUG')) {
+    log('DEBUG', `Received user: "${auth.user}" (expected: "${USERNAME}") - Match: ${userMatch}`);
+    log('DEBUG', `Received pass: "${auth.pass.substring(0, 3)}***" (expected: "${PASSWORD.substring(0, 3)}***") - Match: ${passMatch}`);
+  }
+  
+  return userMatch && passMatch;
 }
 
 // Unauthorized HTML body
