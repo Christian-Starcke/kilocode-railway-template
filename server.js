@@ -166,8 +166,7 @@ function handleRequest(req, res) {
     headers: { ...req.headers },
   };
 
-  // Strip auth headers to avoid issues with internal proxy
-  delete options.headers.authorization;
+  // Strip only proxy-specific headers, keep authorization for kilo serve
   delete options.headers['proxy-connection'];
 
   const proxyReq = http.request(options, (proxyRes) => {
