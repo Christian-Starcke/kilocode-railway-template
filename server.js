@@ -77,7 +77,7 @@ function buildSessionCookieHeader(req) {
     `${SESSION_COOKIE_NAME}=${token}`,
     'Path=/',
     'HttpOnly',
-    'SameSite=Lax',
+    'SameSite=None',
     `Max-Age=${Math.max(1, Math.floor(SESSION_MAX_AGE_MS / 1000))}`,
   ];
 
