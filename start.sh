@@ -23,6 +23,9 @@ mkdir -p \
 cd /data/workspace
 
 # Bootstrap phase
+export WORKSPACE_BOOTSTRAP="${WORKSPACE_BOOTSTRAP:-true}"
+export WORKSPACE_ROOT="${WORKSPACE_ROOT:-/data/workspace}"
+
 if [ -n "${KILO_BOOTSTRAP_RAW_URL:-}" ] && command -v curl >/dev/null 2>&1; then
   echo "[kilo] Running remote bootstrap: ${KILO_BOOTSTRAP_RAW_URL}"
   curl -fsSL "${KILO_BOOTSTRAP_RAW_URL}" | bash >> /data/logs/bootstrap.log 2>&1 || \

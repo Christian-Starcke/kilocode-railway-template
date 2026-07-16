@@ -10,6 +10,11 @@ startCommand = "/bin/sh /app/start.sh"
 requiredMountPath = "/data"
 
 # Required variables (set in Railway / connections-hub sync):
-#   KILO_SERVER_PASSWORD - HTTP Basic Auth password (required)
-#   KILO_CONFIG_CONTENT  - trusted kilo.json (MCP + model)
-#   KILO_VERSION         - npm @kilocode/cli version (Dockerfile ARG; rebuild on change)
+#   KILO_SERVER_PASSWORD  - HTTP Basic Auth password (required)
+#   KILO_CONFIG_CONTENT   - trusted kilo.json (MCP + model)
+#   KILO_VERSION          - npm @kilocode/cli version (Dockerfile ARG; rebuild on change)
+#   WORKSPACE_BOOTSTRAP   - enable repo clone/pull on boot (should be true)
+#   GIT_REPO_N8N          - n8n-as-code repo URL
+#   GIT_REPO_PLAYBOOK     - prism-playbook repo URL
+#   GIT_REPO_PLATFORM     - prism-platform repo URL
+#   GIT_REPO_KNOWLEDGE    - prism-knowledge repo URL

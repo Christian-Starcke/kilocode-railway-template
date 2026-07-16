@@ -13,6 +13,11 @@ Thin Railway deploy for [Kilo Code CLI](https://kilo.ai/) (`kilo serve`).
 | `KILO_SERVER_PASSWORD` | Basic Auth password (required) |
 | `KILO_CONFIG_CONTENT` | Trusted `kilo.json` (MCP + model); synced from connections-hub |
 | `KILO_VERSION` | npm `@kilocode/cli` version baked into the image (Dockerfile `ARG`) |
+| `WORKSPACE_BOOTSTRAP` | Clone/pull repos into `/data/workspace` on boot (`true` to mirror OpenCode) |
+| `GIT_REPO_N8N` | `https://github.com/prism-platform-ap/n8n-as-code` |
+| `GIT_REPO_PLAYBOOK` | `https://github.com/prism-platform-ap/prism-playbook` |
+| `GIT_REPO_PLATFORM` | `https://github.com/prism-platform-ap/prism-platform` |
+| `GIT_REPO_KNOWLEDGE` | `https://github.com/prism-platform-ap/prism-knowledge` |
 
 Also set by connections-hub sync: provider API keys, `SEARXNG_URL`, `HOME=/data`, `KILO_NO_DAEMON=true`, `NPM_CONFIG_CACHE`, `PREPEND_PATH`.
 
