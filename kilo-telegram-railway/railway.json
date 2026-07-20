@@ -1,0 +1,15 @@
+{
+  "build": {
+    "builder": "dockerfile",
+    "dockerfilePath": "kilo-telegram-railway/Dockerfile"
+  },
+  "deploy": {
+    "restartPolicyType": "on_failure",
+    "serverless": false,
+    "startCommand": "/bin/sh /app/entrypoint.sh",
+    "volume": {
+      "mountPath": "/data",
+      "name": "kilo-telegram-data"
+    }
+  }
+}

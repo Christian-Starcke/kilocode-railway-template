@@ -1,0 +1,17 @@
+{
+  "name": "kilo-telegram-railway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dedicated Telegram bot that drives Kilo Code via the documented CLI attach/run contract.",
+  "type": "commonjs",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "grammy": "^1.30.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

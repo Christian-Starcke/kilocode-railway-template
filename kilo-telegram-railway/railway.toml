@@ -1,0 +1,27 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "kilo-telegram-railway/Dockerfile"
+
+[deploy]
+restartPolicyType = "on_failure"
+serverless = false
+startCommand = "/bin/sh /app/entrypoint.sh"
+
+# Persistent volume for bot routing/session state.
+requiredMountPath = "/data"
+
+# Required variables (set in Railway / connections-hub sync):
+#   TELEGRAM_BOT_TOKEN        - dedicated BotFather token for this bot
+#   TELEGRAM_ALLOWED_USER_ID  - comma-separated allowed Telegram user IDs
+#   KILO_SERVER_URL           - https://kilo-production-....up.railway.app
+#   KILO_SERVER_USERNAME      - kilo
+#   KILO_SERVER_PASSWORD      - Kilo Basic Auth password
+#   KILO_DEFAULT_WORKDIR      - default --dir for /kilo
+#   KILO_TELEGRAM_HOME        - /data
+#
+# Optional:
+#   KILO_DEFAULT_AGENT        - default --agent (omit flag if unset)
+#   KILO_DEFAULT_MODEL        - default --model
+#   KILO_WORKSPACES_JSON      - {"alias": "/data/workspace/repo", ...}
+#   TELEGRAM_FORCE_IPV4       - set non-empty to prefer IPv4 for polling
+#   KILO_LOG_LEVEL
