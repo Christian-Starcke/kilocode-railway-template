@@ -250,12 +250,16 @@ kilo run --attach "$KILO_SERVER_URL" --username "$KILO_SERVER_USERNAME" --passwo
 - Modify: `kilo-telegram-railway/railway.toml`
 - Modify: `kilo-telegram-railway/railway.json`
 
+**Current Railway UI state:** A blank `kilo-telegram-bot` service already exists in the Kilo Code project with its own `/data` volume mounted. Phase 4 now only needs source/root configuration, env vars, and the first deploy.
+
 **Deployment requirements:**
 - Install and pin `@kilocode/cli` in the bot image.
 - Start the bot with long polling; no public domain needed.
 - Mount `/data` for routing/session state.
 - Restart on failure.
 - Validate required env vars on boot.
+- Set the Railway service root/build context to `kilo-telegram-railway/` so it uses the bot Dockerfile, not the repo-root Kilo server Dockerfile.
+- Run Railway deploy/link steps from a CLI context that is linked to the Kilo Code project/environment; do not rely on an inherited Railway context from another project.
 
 **Environment variables:**
 
@@ -294,6 +298,7 @@ Then confirm the Railway service logs show the bot started and Telegram polling 
 
 **Changes to make:**
 - Add a `kilo-telegram-bot` service section to the Railway sync logic.
+- Point that service at the `kilo-telegram-railway/` build root so Railway builds the bot image, not the server image.
 - Provide the dedicated Telegram token for this bot.
 - Reuse the Kilo server password from the existing Kilo service only if the new service truly needs it.
 - Keep token names distinct from the Hermes Telegram gateway.
@@ -350,7 +355,7 @@ Full output saved to `PHASE0_SPIKE_RESULTS.md`.
 
 - [x] **Phase 0:** Kilo CLI contract verified against live server (health, attach run, continue, scrap/session-list limitations confirmed)
 - [x] **Phase 1:** `kilo-telegram-railway/` scaffolded — Dockerfile, entrypoint, package.json, bot.js, kilo-runner.js, state-store.js, railway.toml, railway.json, README (syntax + require smoke test pass)
-- [ ] `kilo-telegram-bot` is created as a separate Railway service
+- [ ] `kilo-telegram-bot` is created as a separate Railway service using `kilo-telegram-railway/` as the build root
 - [ ] Telegram long-polling works without a public domain
 - [ ] `/start`, `/status`, `/projects`, `/project`, `/kilo`, `/sessions`, `/session`, and `/cancel` work
 - [ ] The bot can launch Kilo tasks through the supported CLI attach/run path
@@ -377,3 +382,4 @@ Full output saved to `PHASE0_SPIKE_RESULTS.md`.
 - A dedicated BotFather token (not the Hermes token)
 - Allowed Telegram user ID(s)
 - Kilo server URL + Basic Auth password (known: `kilo-production-083f.up.railway.app`)
+- If the BotFather token has been exposed in chat/logs, regenerate it before broader rollout and update Railway with the replacement secret.

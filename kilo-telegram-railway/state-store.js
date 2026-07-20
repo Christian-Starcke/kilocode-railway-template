@@ -7,6 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const MAX_SESSIONS_PER_CHAT = parseInt(process.env.KILO_MAX_SESSIONS || '50', 10);
+
 function stateDir() {
   const home = process.env.KILO_TELEGRAM_HOME || '/data';
   return path.join(home, 'kilo-telegram');
@@ -45,6 +47,7 @@ function getChat(chatId, threadId) {
     state.chats[key] = {
       activeWorkdir: process.env.KILO_DEFAULT_WORKDIR || '',
       activeSession: '',
+      activeTaskKey: '',
       tasks: [],
     };
   }
@@ -59,12 +62,26 @@ function updateChat(chatId, threadId, patch) {
   return state.chats[key];
 }
 
+// Records a session and trims the list to MAX_SESSIONS_PER_CHAT.
 function recordSession(chatId, threadId, session) {
   const chat = getChat(chatId, threadId);
   chat.tasks.push(session);
   if (session.active) {
     chat.activeSession = session.id;
   }
+  // Trim oldest if over the cap.
+  if (chat.tasks.length > MAX_SESSIONS_PER_CHAT) {
+    chat.tasks = chat.tasks.slice(-MAX_SESSIONS_PER_CHAT);
+  }
+  updateChat(chatId, threadId, chat);
+}
+
+// Marks a session inactive and clears the active task handle if it matches.
+function markSessionInactive(chatId, threadId, sessionKey) {
+  const chat = getChat(chatId, threadId);
+  const task = chat.tasks.find((t) => t.key === sessionKey);
+  if (task) task.active = false;
+  if (chat.activeTaskKey === sessionKey) chat.activeTaskKey = '';
   updateChat(chatId, threadId, chat);
 }
 
@@ -80,6 +97,7 @@ module.exports = {
   getChat,
   updateChat,
   recordSession,
+  markSessionInactive,
   listSessions,
   getSession,
 };
