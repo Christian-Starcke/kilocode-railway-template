@@ -128,8 +128,9 @@ function runPrompt({ prompt, workdir, sessionId, agent, model, onText, onSession
 async function health() {
   const url = `${SERVER_URL.replace(/\/$/, '')}/global/health`;
   const auth = Buffer.from(`${USERNAME}:${PASSWORD}`).toString('base64');
+  const authHeader = 'Basic ' + auth;
   try {
-    const res = await fetch(url, { headers: { Authorization: `Basic ${auth}` } });
+    const res = await fetch(url, { headers: { Authorization: authHeader } });
     if (!res.ok) return { ok: false, status: res.status };
     const body = await res.json();
     return { ok: true, healthy: body.healthy, version: body.version };

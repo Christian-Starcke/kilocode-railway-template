@@ -143,7 +143,9 @@ bot.command('kilo', async (ctx) => {
 
   try {
     const result = await run;
-    if (result.sessionId) {
+    // Avoid a duplicate session entry: onSession already recorded it with
+    // active:true. Only record here if onSession never captured a session ID.
+    if (result.sessionId && !store.getSession(ctx.chat.id, threadId, result.sessionId)) {
       store.recordSession(ctx.chat.id, threadId, {
         id: result.sessionId,
         key,
@@ -184,12 +186,21 @@ bot.command('session', async (ctx) => {
   if (!workdir) return ctx.reply('Set a workdir first with /project <name|path>.');
 
   await ctx.reply(`Resuming ${id}…`);
+  const rkey = taskKey(ctx.chat.id, threadId);
+  if (activeTasks.has(rkey)) {
+    return ctx.reply('A task is already running for this chat. Use /cancel first.');
+  }
+  const run = kilo.runPrompt({ prompt: 'continue', workdir, sessionId: id });
+  activeTasks.set(rkey, run);
   try {
-    const result = await kilo.runPrompt({ prompt: 'continue', workdir, sessionId: id });
-    store.updateChat(ctx.chat.id, threadId, { activeSession: id });
+    const result = await run;
+    store.updateChat(ctx.chat.id, threadId, { activeSession: id, activeTaskKey: rkey });
     return ctx.reply(result.text || '(no output)');
   } catch (err) {
     return ctx.reply(`Kilo error: ${String(err.message || err)}`);
+  } finally {
+    activeTasks.delete(rkey);
+    store.markSessionInactive(ctx.chat.id, threadId, rkey);
   }
 });
 
