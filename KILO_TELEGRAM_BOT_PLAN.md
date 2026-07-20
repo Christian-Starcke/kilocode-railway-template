@@ -355,12 +355,13 @@ Full output saved to `PHASE0_SPIKE_RESULTS.md`.
 
 - [x] **Phase 0:** Kilo CLI contract verified against live server (health, attach run, continue, scrap/session-list limitations confirmed)
 - [x] **Phase 1:** `kilo-telegram-railway/` scaffolded — Dockerfile, entrypoint, package.json, bot.js, kilo-runner.js, state-store.js, railway.toml, railway.json, README (syntax + require smoke test pass)
-- [ ] `kilo-telegram-bot` is created as a separate Railway service using `kilo-telegram-railway/` as the build root
-- [ ] Telegram long-polling works without a public domain
-- [ ] `/start`, `/status`, `/projects`, `/project`, `/kilo`, `/sessions`, `/session`, and `/cancel` work
-- [ ] The bot can launch Kilo tasks through the supported CLI attach/run path
-- [ ] Active workdir and session mapping persist across restarts via the bot’s `/data` volume
-- [ ] The bot uses a dedicated Telegram token and does not collide with Hermes
+- [x] **Phase 2:** Kilo runner hardened — `Bearer` auth fix, `step_start` sessionID capture, child PID + `.cancel()` for `/cancel`, `RUN_TIMEOUT_MS` cap, `onText`/`onSession` streaming callbacks, state-store `activeTaskKey` + trim + `markSessionInactive`, bot `/kilo` streaming + `/cancel` wired. Redeployed to Railway (deploy `30ee12ff`, SUCCESS, polling active). Unit tests for runner + store pass.
+- [x] `kilo-telegram-bot` is created as a separate Railway service using `kilo-telegram-railway/` as the build root
+- [x] Telegram long-polling works without a public domain
+- [x] `/start`, `/status`, `/projects`, `/project`, `/kilo`, `/sessions`, `/session`, and `/cancel` work
+- [x] The bot can launch Kilo tasks through the supported CLI attach/run path
+- [x] Active workdir and session mapping persist across restarts via the bot’s `/data` volume
+- [x] The bot uses a dedicated Telegram token and does not collide with Hermes
 - [ ] The Railway sync pipeline is updated to provision the new service consistently
 
 ---
