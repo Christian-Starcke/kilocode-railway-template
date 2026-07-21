@@ -315,6 +315,30 @@ function handleUpgrade(req, socket, head) {
   }
 
   // Create outbound WebSocket connection to internal port
+  //
+  // The inner kilo serve validates the WebSocket auth via the `auth_token` query
+  // parameter on /pty/:id/connect. The browser sends `auth_token=base64(kilo:kilo)`
+  // (its hardcoded default) because it doesn't know about KILO_SERVER_PASSWORD.
+  //
+  // If we forward that bad auth_token as-is, kilo serve silently rejects the
+  // WebSocket upgrade and the browser shows "Terminal disconnected".
+  //
+  // Strip the auth_token from the upstream URL so the inner kilo serve falls back
+  // to the Authorization header (which we inject below with the real credentials).
+  const internalUrl = (() => {
+    try {
+      const u = new URL(url, 'http://127.0.0.1');
+      u.searchParams.delete('auth_token');
+      return u.pathname + (u.search ? u.search : '');
+    } catch (_) {
+      return url;
+    }
+  })();
+
+  if (shouldLog('DEBUG')) {
+    log('DEBUG', `Forwarding WebSocket to internal as ${internalUrl}`);
+  }
+
   const outboundHeaders = {
     ...req.headers,
     authorization: buildInternalAuthHeader(),
@@ -324,7 +348,7 @@ function handleUpgrade(req, socket, head) {
   const outboundReq = http.request({
     hostname: '127.0.0.1',
     port: INTERNAL_PORT,
-    path: url,
+    path: internalUrl,
     method: 'GET',
     headers: outboundHeaders,
   });
