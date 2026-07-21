@@ -16,6 +16,30 @@ const http = require('http');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
 
+// Terminal buffer for copy-to-clipboard support
+const TERMINAL_BUFFER_MAX = 500;
+let terminalBuffer = [];
+
+function stripAnsi(str) {
+  return str.replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\]\d+(?:;\d+)*;?[\x07\x1B]?)/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .trim();
+}
+
+function appendToBuffer(text) {
+  if (!text) return;
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const clean = stripAnsi(line);
+    if (clean) {
+      terminalBuffer.push(clean);
+      if (terminalBuffer.length > TERMINAL_BUFFER_MAX) {
+        terminalBuffer.shift();
+      }
+    }
+  }
+}
+
 // Configuration from environment
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const INTERNAL_PORT = parseInt(process.env.INTERNAL_PORT || String(PORT + 1), 10);
@@ -203,6 +227,18 @@ function handleRequest(req, res) {
     log('DEBUG', `${req.method} ${url} from ${req.socket.remoteAddress}`);
   }
 
+  // Terminal buffer API endpoint
+  if (pathname === '/api/terminal-buffer') {
+    const text = terminalBuffer.join('\n');
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.end(text || '(terminal buffer empty)');
+    return;
+  }
+
   // Redirect root to /console
   if (pathname === '/' || pathname === '') {
     res.writeHead(302, { Location: '/console' });
@@ -266,28 +302,33 @@ function handleRequest(req, res) {
           : [existingSetCookie, sessionCookie]
         : sessionCookie;
     }
-
-    const contentType = (proxyRes.headers['content-type'] || '').toLowerCase();
-    if (contentType.includes('text/html')) {
-      let body = '';
-      delete responseHeaders['content-length'];
-      res.writeHead(proxyRes.statusCode, responseHeaders);
-      proxyRes.on('data', chunk => { body += chunk.toString(); });
-      proxyRes.on('end', () => {
-        const fixed = body.replace(
-          '</head>',
-          '<style>body, html { overflow: auto !important; }</style>\n</head>'
-        );
-        res.end(fixed);
-      });
-      proxyRes.on('error', (err) => {
-        log('ERROR', `HTML read error: ${err.message}`);
-        proxyRes.pipe(res);
-      });
-    } else {
-      res.writeHead(proxyRes.statusCode, responseHeaders);
-      proxyRes.pipe(res);
-    }
+    // Inject scrollbar fix + copy widget into HTML responses
+        const contentType = (proxyRes.headers['content-type'] || '').toLowerCase();
+        if (contentType.includes('text/html')) {
+          let body = '';
+          delete responseHeaders['content-length'];
+          res.writeHead(proxyRes.statusCode, responseHeaders);
+          proxyRes.on('data', chunk => { body += chunk.toString(); });
+          proxyRes.on('end', () => {
+            const fixed = body
+              .replace(
+                '</head>',
+                '<style>body, html { overflow: auto !important; }</style>\n</head>'
+              )
+              .replace(
+                '</body>',
+                '<script>\n(function(){\nvar ID="kilo-copy-widget";\nif(document.getElementById(ID))return;\nvar b=document.createElement("button");\nb.id=ID;\nb.textContent="Copy Terminal";\nb.style.cssText="position:fixed;bottom:12px;right:290px;z-index:9999;padding:6px 14px;background:#2a2a2a;color:#e0e0e0;border:1px solid #444;border-radius:6px;cursor:pointer;font:12px/1.4 system-ui;box-shadow:0 2px 8px rgba(0,0,0,.4);";\nb.onclick=async function(){\nvar t=b.textContent;\nb.textContent="Fetching...";\nb.disabled=true;\ntry{\nvar r=await fetch("/api/terminal-buffer");\nvar txt=await r.text();\nawait navigator.clipboard.writeText(txt);\nb.textContent="Copied!";\nsetTimeout(function(){b.textContent=t;b.disabled=false;},2000);\n}catch(e){\nb.textContent="Copy failed";\nsetTimeout(function(){b.textContent=t;b.disabled=false;},3000);\n}\n};\ndocument.body.appendChild(b);\n})();\n</script>\n</body>'
+              );
+            res.end(fixed);
+          });
+          proxyRes.on('error', (err) => {
+            log('ERROR', `HTML read error: ${err.message}`);
+            proxyRes.pipe(res);
+          });
+        } else {
+          res.writeHead(proxyRes.statusCode, responseHeaders);
+          proxyRes.pipe(res);
+        }
   });
 
   proxyReq.on('error', (err) => {
@@ -398,8 +439,12 @@ function handleUpgrade(req, socket, head) {
       socket.write(proxyHead);
     }
 
-    // Bidirectional tunnel
-    proxySocket.pipe(socket);
+    // Bidirectional tunnel — intercept server→client data for terminal buffer
+    proxySocket.on('data', (chunk) => {
+      const text = chunk.toString('utf8');
+      appendToBuffer(text);
+      socket.write(chunk);
+    });
     socket.pipe(proxySocket);
 
     proxySocket.on('error', (err) => {
