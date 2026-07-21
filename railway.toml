@@ -14,6 +14,13 @@ requiredMountPath = "/data"
 #   KILO_CONFIG_CONTENT   - trusted kilo.json (MCP + model)
 #   KILO_VERSION          - npm @kilocode/cli version (Dockerfile ARG; rebuild on change)
 #   WORKSPACE_BOOTSTRAP   - enable repo clone/pull on boot (should be true)
+#
+# Workspace repo mode (use instead of GIT_REPO_* for a single workspace repo):
+#   KILO_WORKSPACE_REPO_URL - URL of the workspace repo (e.g. https://github.com/Christian-Starcke/kilocode-workspace.git)
+#     When set, workspace-bootstrap clones/pulls this repo as the workspace root
+#     instead of cloning individual repos via GIT_REPO_*.
+#
+# Legacy individual repo vars (ignored when KILO_WORKSPACE_REPO_URL is set):
 #   GIT_REPO_N8N          - n8n-as-code repo URL
 #   GIT_REPO_PLAYBOOK     - prism-playbook repo URL
 #   GIT_REPO_PLATFORM     - prism-platform repo URL

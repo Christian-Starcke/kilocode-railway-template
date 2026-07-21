@@ -56,10 +56,33 @@ clone_or_pull_repo() {
 
 if [ "${WORKSPACE_BOOTSTRAP:-false}" = "true" ]; then
   configure_git_auth
-  clone_or_pull_repo "${GIT_REPO_N8N:-}" "${WORKSPACE_ROOT}/n8n-as-code"
-  clone_or_pull_repo "${GIT_REPO_PLAYBOOK:-}" "${WORKSPACE_ROOT}/prism-playbook"
-  clone_or_pull_repo "${GIT_REPO_PLATFORM:-}" "${WORKSPACE_ROOT}/prism-platform"
-  clone_or_pull_repo "${GIT_REPO_KNOWLEDGE:-}" "${WORKSPACE_ROOT}/prism-knowledge"
+
+  # If a workspace repo URL is set, clone/pull that as the workspace root
+  if [ -n "${KILO_WORKSPACE_REPO_URL:-}" ]; then
+    echo "[workspace-bootstrap] KILO_WORKSPACE_REPO_URL set; using workspace repo instead of individual repos"
+    if [ -d "${WORKSPACE_ROOT}/.git" ]; then
+      echo "[workspace-bootstrap] pulling workspace root repo"
+      git -C "${WORKSPACE_ROOT}" pull --ff-only --prune || {
+        echo "[workspace-bootstrap] WARNING: failed to pull workspace repo" >&2
+      }
+    elif [ -d "${WORKSPACE_ROOT}" ] && [ "$(ls -A "${WORKSPACE_ROOT}")" ]; then
+      echo "[workspace-bootstrap] workspace root exists but is not empty; initializing from workspace repo"
+      git -C "${WORKSPACE_ROOT}" init
+      git -C "${WORKSPACE_ROOT}" remote add origin "${KILO_WORKSPACE_REPO_URL}"
+      git -C "${WORKSPACE_ROOT}" fetch origin
+      git -C "${WORKSPACE_ROOT}" reset --hard origin/main 2>/dev/null || git -C "${WORKSPACE_ROOT}" reset --hard origin/master 2>/dev/null || true
+    else
+      echo "[workspace-bootstrap] cloning workspace repo into ${WORKSPACE_ROOT}"
+      git clone "${KILO_WORKSPACE_REPO_URL}" "${WORKSPACE_ROOT}" || {
+        echo "[workspace-bootstrap] WARNING: failed to clone workspace repo" >&2
+      }
+    fi
+  else
+    clone_or_pull_repo "${GIT_REPO_N8N:-}" "${WORKSPACE_ROOT}/n8n-as-code"
+    clone_or_pull_repo "${GIT_REPO_PLAYBOOK:-}" "${WORKSPACE_ROOT}/prism-playbook"
+    clone_or_pull_repo "${GIT_REPO_PLATFORM:-}" "${WORKSPACE_ROOT}/prism-platform"
+    clone_or_pull_repo "${GIT_REPO_KNOWLEDGE:-}" "${WORKSPACE_ROOT}/prism-knowledge"
+  fi
 else
   echo "[workspace-bootstrap] WORKSPACE_BOOTSTRAP=false; skipping repo clone/pull"
 fi
