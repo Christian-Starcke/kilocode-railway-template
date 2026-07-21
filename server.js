@@ -267,8 +267,27 @@ function handleRequest(req, res) {
         : sessionCookie;
     }
 
-    res.writeHead(proxyRes.statusCode, responseHeaders);
-    proxyRes.pipe(res);
+    const contentType = (proxyRes.headers['content-type'] || '').toLowerCase();
+    if (contentType.includes('text/html')) {
+      let body = '';
+      delete responseHeaders['content-length'];
+      res.writeHead(proxyRes.statusCode, responseHeaders);
+      proxyRes.on('data', chunk => { body += chunk.toString(); });
+      proxyRes.on('end', () => {
+        const fixed = body.replace(
+          '</head>',
+          '<style>body, html { overflow: auto !important; }</style>\n</head>'
+        );
+        res.end(fixed);
+      });
+      proxyRes.on('error', (err) => {
+        log('ERROR', `HTML read error: ${err.message}`);
+        proxyRes.pipe(res);
+      });
+    } else {
+      res.writeHead(proxyRes.statusCode, responseHeaders);
+      proxyRes.pipe(res);
+    }
   });
 
   proxyReq.on('error', (err) => {
